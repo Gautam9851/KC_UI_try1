@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katmai Computing - Quantum Explorer</title>
+    <style>
+        :root {
+            --primary: #0cf;
+            --secondary: #08a;
+            --dark: #023;
+            --light: #def;
+            --accent: #f0c;
+            --success: #0f8;
+            --warning: #fc0;
+            --error: #f34;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: rgba(0, 0, 30, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+
+        .logo .atom {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+
+        .nucleus {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .electron-orbit {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate 2s linear infinite;
+        }
+
+        .electron {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 5px var(--accent);
+        }
+
+        @keyframes rotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        nav button {
+            background: transparent;
+            color: var(--light);
+            border: 1px solid var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        nav button:hover {
+            background-color: var(--primary);
+            color: var(--dark);
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .sidebar {
+            background-color: rgba(0, 20, 40, 0.7);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: calc(100vh - 6rem);
+            position: sticky;
+            top: 5rem;
+        }
+
+        .pulse-programs {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .pulse-programs h3 {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary);
+        }
+
+        .program-item {
+            background-color: rgba(0, 40, 80, 0.5);
+            margin-bottom: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .program-item:hover {
+            background-color: rgba(0, 60, 100, 0.7);
+            border-left: 3px solid var(--primary);
+        }
+
+        .program-item.active {
+            background-color: rgba(0, 100, 170, 0.3);
+            border-left: 3px solid var(--primary);
+        }
+
+        .program-info {
+            font-size: 0.8rem;
+            color: #9ab;
+            margin-top: 0.25rem;
+        }
+
+        .system-status {
+            background-color: rgba(0, 20, 40, 0.7);
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid var(--secondary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success);
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 1px solid var(--success);
+            opacity: 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(0.8); }
+            70% { opacity: 0; transform: scale(1.5); }
+            100% { opacity: 0; }
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .pulse-display {
+            background-color: rgba(0, 20, 40, 0.7);
+            border-radius: 8px;
+            border: 1px solid var(--secondary);
+            padding: 1rem;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pulse-display h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pulse-canvas {
+            height: 220px;
+            background-color: rgba(0, 10, 20, 0.7);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pulse-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .pulse-wave {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .pulse {
+            position: absolute;
+            height: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-x {
+            border-left: 1px dashed var(--primary);
+            color: var(--primary);
+        }
+
+        .pulse-y {
+            border-left: 1px dashed var(--accent);
+            color: var(--accent);
+        }
+
+        .pulse-label {
+            position: absolute;
+            top: -20px;
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+
+        .pulse-angle {
+            position: absolute;
+            top: 65px;
+            white-space: nowrap;
+            font-size: 0.7rem;
+        }
+
+        .pulse-arrow {
+            width: 40px;
+            height: 6px;
+        }
+
+        .pulse-x .pulse-arrow {
+            background-color: var(--primary);
+        }
+
+        .pulse-y .pulse-arrow {
+            background-color: var(--accent);
+        }
+
+        .results-display {
+            background-color: rgba(0, 20, 40, 0.7);
+            border-radius: 8px;
+            border: 1px solid var(--secondary);
+            padding: 1rem;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .results-display h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .spectrum-display, .bloch-sphere {
+            background-color: rgba(0, 10, 20, 0.7);
+            border-radius: 4px;
+            padding: 0.5rem;
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spectrum-display h3, .bloch-sphere h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #9ab;
+        }
+
+        .spectrum-canvas {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spectrum-line {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .frequency-labels {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #789;
+            padding: 0 10px;
+        }
+
+        .spectrum-peak {
+            position: absolute;
+            bottom: 30px;
+            width: 2px;
+            background-color: var(--primary);
+            transform-origin: bottom;
+            box-shadow: 0 0 5px var(--primary);
+        }
+
+        .bloch-canvas {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .sphere {
+            width: 150px;
+            height: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .axis {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .x-axis {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+            left: 0;
+        }
+
+        .y-axis {
+            width: 1px;
+            height: 100%;
+            top: 0;
+            left: 50%;
+        }
+
+        .z-axis {
+            width: 1px;
+            height: 100%;
+            top: 0;
+            left: 50%;
+            transform: rotateX(90deg);
+            transform-origin: center;
+        }
+
+        .state-vector {
+            position: absolute;
+            width: 2px;
+            height: 60px;
+            background: linear-gradient(to top, var(--primary), var(--accent));
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: rotate(45deg);
+        }
+
+        .state-vector::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            top: 0;
+            left: -2px;
+            box-shadow: 0 0 5px var(--accent);
+        }
+
+        .axis-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-size: 0.7rem;
+        }
+
+        .x-label {
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .y-label {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .z-label {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .control-panel {
+            background-color: rgba(0, 20, 40, 0.7);
+            border-radius: 8px;
+            border: 1px solid var(--secondary);
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .run-btn {
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .run-btn:hover {
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+        }
+
+        .control-input {
+            background-color: rgba(0, 40, 70, 0.5);
+            border: 1px solid var(--secondary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            color: var(--light);
+            width: 100px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background-color: rgba(0, 40, 70, 0.5);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .control-icon {
+            margin-right: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: rgba(0, 0, 30, 0.8);
+            border-top: 1px solid var(--secondary);
+            font-size: 0.8rem;
+            color: #789;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 10, 30, 0.9) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 100, 200, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 100, 200, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background-color: rgba(0, 200, 255, 0.3);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 20, 40, 0.9);
+            color: var(--light);
+            text-align: center;
+            border-radius: 4px;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid var(--primary);
+            font-size: 0.8rem;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .badge {
+            background-color: rgba(0, 150, 255, 0.2);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid var(--primary);
+        }
+
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                height: auto;
+                position: static;
+            }
+
+            .results-display {
+                grid-template-columns: 1fr;
+            }
+
+            .results-display h2 {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="grid"></div>
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <div class="logo">
+            <div class="atom">
+                <div class="nucleus"></div>
+                <div class="electron-orbit">
+                    <div class="electron"></div>
+                </div>
+            </div>
+            <h1>Katmai Computing</h1>
+        </div>
+        <nav>
+            <button id="help-btn">Help Guide</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="sidebar">
+            <div class="pulse-programs">
+                <h3>Pulse Programs</h3>
+                <div class="program-item active" data-program="hahn-echo">
+                    <div>Hahn Echo</div>
+                    <div class="program-info">T2 Relaxation Measurement</div>
+                </div>
+                <div class="program-item" data-program="inversion-recovery">
+                    <div>Inversion Recovery</div>
+                    <div class="program-info">T1 Relaxation Measurement</div>
+                </div>
+                <div class="program-item" data-program="cpmg">
+                    <div>CPMG Sequence</div>
+                    <div class="program-info">Enhanced T2 Measurement</div>
+                </div>
+                <div class="program-item" data-program="single-pulse">
+                    <div>Single Pulse</div>
+                    <div class="program-info">Basic FID Acquisition</div>
+                </div>
+                <div class="program-item" data-program="spin-echo">
+                    <div>Spin Echo</div>
+                    <div class="program-info">180° Refocusing</div>
+                </div>
+                <div class="program-item" data-program="gradient-echo">
+                    <div>Gradient Echo</div>
+                    <div class="program-info">Position Encoding</div>
+                </div>
+            </div>
+            <div class="system-status">
+                <div>System Status</div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <div>Ready for experiment</div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" style="background-color: var(--success);"></div>
+                    <div>Temperature: 22.4°C</div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" style="background-color: var(--success);"></div>
+                    <div>Field: 1.41 Tesla</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="pulse-display">
+                <h2>
+                    Pulse Sequence
+                    <span class="badge">Hahn Echo</span>
+                </h2>
+                <div class="pulse-canvas">
+                    <div class="pulse-line"></div>
+                    <div class="pulse-wave">
+                        <div class="pulse pulse-x" style="left: 20%;">
+                            <div class="pulse-label">90° Pulse</div>
+                            <div class="pulse-arrow"></div>
+                            <div class="pulse-angle">x-axis</div>
+                        </div>
+                        <div class="pulse pulse-y" style="left: 50%;">
+                            <div class="pulse-label">180° Pulse</div>
+                            <div class="pulse-arrow" style="width: 60px;"></div>
+                            <div class="pulse-angle">y-axis</div>
+                        </div>
+                        <div class="pulse pulse-x" style="left: 80%; border-left: 1px dashed var(--success); color: var(--success);">
+                            <div class="pulse-label">Echo</div>
+                            <div class="pulse-arrow" style="width: 30px; background-color: var(--success);"></div>
+                            <div class="pulse-angle">Signal</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="run-btn" id="run-btn">
+                    <span class="control-icon">▶</span>
+                    Run Experiment
+                </button>
+                <div class="control-group">
+                    <span class="control-label">Delay (ms):</span>
+                    <input type="number" class="control-input" value="20" min="1" max="100" id="delay-input">
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="results-display">
+                <h2>
+                    Results 
+                    <span class="tooltip">
+                        ℹ️
+                        <span class="tooltip-text">Real-time results from the quantum experiment will appear here.</span>
+                    </span>
+                </h2>
+                <div class="spectrum-display">
+                    <h3>NMR Spectrum</h3>
+                    <div class="spectrum-canvas">
+                        <div class="spectrum-line"></div>
+                        <div class="spectrum-peak" style="left: 50%; height: 80px;"></div>
+                        <div class="frequency-labels">
+                            <span>-200 Hz</span>
+                            <span>0 Hz</span>
+                            <span>+200 Hz</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bloch-sphere">
+                    <h3>Bloch Sphere Representation</h3>
+                    <div class="bloch-canvas">
+                        <div class="sphere">
+                            <div class="axis x-axis"></div>
+                            <div class="axis y-axis"></div>
+                            <div class="state-vector"></div>
+                            <div class="axis-labels">
+                                <div class="axis-label x-label">X</div>
+                                <div class="axis-label y-label">Y</div>
+                                <div class="axis-label z-label">Z</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2025 Katmai Computing - Quantum Explorer | Educational Quantum Computing Platform
+    </footer>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size
+                const size = Math.random() * 5 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100 + 100;
+                particle.style.left = `${posX}%`;
+                particle.style.bottom = `${-posY}px`;
+                
+                // Random animation duration and delay
+                const duration = Math.random() * 30 + 15;
+                const delay = Math.random() * 20;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Simulation functions
+        function runExperiment() {
+            const progressFill = document.getElementById('progress-fill');
+            const runBtn = document.getElementById('run-btn');
+            const delayInput = document.getElementById('delay-input');
+            
+            // Disable run button during experiment
+            runBtn.disabled = true;
+            delayInput.disabled = true;
+            runBtn.innerHTML = '<span class="control-icon">⏳</span> Running...';
+            
+            // Reset state vector
+            document.querySelector('.state-vector').style.transform = 'rotate(0deg)';
+            
+            // Animate progress bar
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                progressFill.style.width = `${progress}%`;
+                
+                // Animate state vector according to pulse sequence
+                const stateVector = document.querySelector('.state-vector');
+                
+                if (progress === 20) {
+                    // 90° pulse
+                    stateVector.style.transform = 'rotate(90deg)';
+                } else if (progress === 50) {
+                    // 180° pulse
+                    stateVector.style.transform = 'rotate(270deg)';
+                } else if (progress === 80) {
+                    // Echo
+                    stateVector.style.transform = 'rotate(90deg)';
+                    
+                    // Show spectrum peak
+                    const spectrumPeak = document.querySelector('.spectrum-peak');
+                    spectrumPeak.style.height = '0px';
+                    setTimeout(() => {
+                        spectrumPeak.style.transition = 'height 0.5s ease-out';
+                        spectrumPeak.style.height = '80px';
+                    }, 100);
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    runBtn.disabled = false;
+                    delayInput.disabled = false;
+                    runBtn.innerHTML = '<span class="control-icon">▶</span> Run Experiment';
+                    
+                    // Display completion status
+                    const statusDot = document.querySelectorAll('.status-dot')[0];
+                    const statusText = document.querySelectorAll('.status-indicator')[0].lastElementChild;
+                    statusDot.style.backgroundColor = 'var(--success)';
+                    statusText.textContent = 'Experiment completed';
+                    
+                    setTimeout(() => {
+                        statusText.textContent = 'Ready for experiment';
+                    }, 3000);
+                }
+            }, 50);
+        }
+
+        // Handle pulse program selection
+        function selectPulseProgram(programName) {
+            const items = document.querySelectorAll('.program-item');
+            items.forEach(item => item.classList.remove('active'));
+            
+            const selectedItem = document.querySelector(`[data-program="${programName}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('active');
+            }
+            
+            // Update badge
+            const badge = document.querySelector('.badge');
+            badge.textContent = programName.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            
+            // Reset progress
+            document.getElementById('progress-fill').style.width = '0%';
+            
+            // Reset state vector
+            document.querySelector('.state-vector').style.transform = 'rotate(0deg)';
+            
+            // Update pulse display based on selected program
+            updatePulseDisplay(programName);
+        }
+
+        function updatePulseDisplay(programName) {
+            const pulseWave = document.querySelector('.pulse-wave');
+            
+            // Clear existing pulses
+            pulseWave.innerHTML = '';
+            
+            if (programName === 'hahn-echo') {
+                // Add Hahn Echo sequence
+                pulseWave.innerHTML = `
+                    <div class="pulse pulse-x" style="left: 20%;">
+                        <div class="pulse-label">90° Pulse</div>
+                        <div class="pulse-arrow"></div>
+                        <div class="pulse-angle">x-axis</div>
+                    </div>
+                    <div class="pulse pulse-y" style="left: 50%;">
+                        <div class="pulse-label">180° Pulse</div>
+                        <div class="pulse-arrow" style
